@@ -4,7 +4,7 @@ services:
     name: cocoguard-api
     runtime: python
     region: singapore  # Change to your preferred region: oregon, ohio, frankfurt, singapore
-    plan: starter  # starter has enough memory for TensorFlow (512MB). Use "standard" for 2GB if needed
+    plan: free  # Free tier - may have memory limits for TensorFlow
     buildCommand: chmod +x build.sh && ./build.sh
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
