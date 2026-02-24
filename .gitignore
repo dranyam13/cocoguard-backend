@@ -1,0 +1,40 @@
+# Environment variables (contains secrets)
+.env
+
+# Firebase service account (contains private keys - NEVER commit!)
+firebase-service-account.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Database files
+*.db
+*.sqlite3
+
+# Uploads (user content)
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keep model directory (needed for deployment)
+!model/

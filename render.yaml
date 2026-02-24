@@ -1,0 +1,28 @@
+services:
+  # CocoGuard Backend API
+  - type: web
+    name: cocoguard-api
+    runtime: python
+    region: singapore  # Change to your preferred region: oregon, ohio, frankfurt, singapore
+    plan: starter  # starter has enough memory for TensorFlow (512MB). Use "standard" for 2GB if needed
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.4"
+      - key: DATABASE_URL
+        value: sqlite:///./cocoguard.db
+      - key: SECRET_KEY
+        generateValue: true  # Auto-generate a secure secret key
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: MAX_UPLOAD_SIZE
+        value: "5242880"
+      - key: UPLOAD_DIR
+        value: ./uploads
+      - key: ALLOWED_ORIGINS_RAW
+        value: "https://cocoguard-web.onrender.com,https://cocoguard-web.pages.dev,http://localhost:3000"
+    healthCheckPath: /health
+    autoDeploy: true

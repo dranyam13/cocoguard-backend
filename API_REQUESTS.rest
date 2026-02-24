@@ -1,0 +1,246 @@
+// CocoGuard API Testing Guide
+// Use this file with REST Client extensions (VSCode REST Client, Postman, etc.)
+
+@baseUrl = http://localhost:8000
+@token = 
+
+### Health Check
+GET {{baseUrl}}/
+
+### ===== AUTHENTICATION =====
+
+### Register new user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "full_name": "John Farmer",
+  "username": "johnfarmer",
+  "email": "john@example.com",
+  "password": "SecurePassword123!",
+  "region": "Mindanao",
+  "province": "Davao",
+  "city": "Davao City",
+  "barangay": "Buhangin",
+  "plantation_name": "Sunrise Farm",
+  "total_trees": 500
+}
+
+@@ Save the access_token from response to @token variable
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email_or_username": "john@example.com",
+  "password": "SecurePassword123!"
+}
+
+### ===== USER ENDPOINTS =====
+
+### Get current user profile
+GET {{baseUrl}}/users/me
+Authorization: Bearer {{token}}
+
+### List all users (admin only)
+GET {{baseUrl}}/users
+Authorization: Bearer {{token}}
+
+### ===== FARM ENDPOINTS =====
+
+### List user's farms
+GET {{baseUrl}}/farms
+Authorization: Bearer {{token}}
+
+### Create a new farm
+POST {{baseUrl}}/farms
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Tropical Haven Farm",
+  "address_line": "123 Plantation Road",
+  "region": "Mindanao",
+  "province": "Davao",
+  "city": "Davao City",
+  "barangay": "Buhangin",
+  "plantation_name": "Tropical Haven",
+  "total_trees": 750
+}
+
+### Get specific farm
+GET {{baseUrl}}/farms/1
+Authorization: Bearer {{token}}
+
+### Update farm
+PUT {{baseUrl}}/farms/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Farm Name",
+  "total_trees": 800
+}
+
+### Delete farm
+DELETE {{baseUrl}}/farms/1
+Authorization: Bearer {{token}}
+
+### ===== PEST TYPES =====
+
+### List all pest types
+GET {{baseUrl}}/pest-types?limit=50
+Authorization: Bearer {{token}}
+
+### Get specific pest type
+GET {{baseUrl}}/pest-types/1
+Authorization: Bearer {{token}}
+
+### Create pest type (admin only)
+POST {{baseUrl}}/pest-types
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Coconut Rhinoceros Beetle",
+  "scientific_name": "Oryctes rhinoceros",
+  "risk_level": "High",
+  "is_active": true
+}
+
+### ===== SCAN ENDPOINTS =====
+
+### Create a new scan (after uploading image)
+POST {{baseUrl}}/scans
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "farm_id": 1,
+  "tree_code": "TREE-001",
+  "location_text": "North-East Section",
+  "pest_type_id": 1,
+  "confidence": 85.5,
+  "image_url": "/uploads/files/scan_image.jpg"
+}
+
+### List user's scans
+GET {{baseUrl}}/scans/my-scans?limit=50&skip=0
+Authorization: Bearer {{token}}
+
+### Get specific scan
+GET {{baseUrl}}/scans/1
+Authorization: Bearer {{token}}
+
+### Update scan status (admin only)
+PUT {{baseUrl}}/scans/1/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "Verified",
+  "notes": "High risk pest detected. Immediate treatment recommended."
+}
+
+### ===== FILE UPLOADS =====
+
+### Delete uploaded file
+DELETE {{baseUrl}}/uploads/files/1_20231208_120000_scan.jpg
+Authorization: Bearer {{token}}
+
+### ===== FEEDBACK =====
+
+### Submit feedback
+POST {{baseUrl}}/feedback
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Great App!",
+  "message": "The pest detection feature works very well and helped me identify the infestation early.",
+  "category": "general",
+  "rating": 5
+}
+
+### Get my feedback
+GET {{baseUrl}}/feedback/user/me?limit=50
+Authorization: Bearer {{token}}
+
+### Get all feedback (admin only)
+GET {{baseUrl}}/feedback?limit=50
+Authorization: Bearer {{token}}
+
+### ===== KNOWLEDGE BASE =====
+
+### List all knowledge articles
+GET {{baseUrl}}/knowledge?limit=50
+Authorization: Bearer {{token}}
+
+### Get specific article
+GET {{baseUrl}}/knowledge/1
+Authorization: Bearer {{token}}
+
+### Get articles by category
+GET {{baseUrl}}/knowledge/category/pest-management
+Authorization: Bearer {{token}}
+
+### Create knowledge article (admin only)
+POST {{baseUrl}}/knowledge
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Coconut Scale Insect Control Methods",
+  "content": "Coconut scale insects are small pests that feed on coconut plant sap...",
+  "category": "pest-management",
+  "tags": ["scale-insect", "control", "pesticide"],
+  "image_url": null
+}
+
+### ===== ANALYTICS =====
+
+### Get dashboard summary
+GET {{baseUrl}}/analytics/dashboard/summary
+Authorization: Bearer {{token}}
+
+### Get scans by pest type
+GET {{baseUrl}}/analytics/scans/by-pest?days=30
+Authorization: Bearer {{token}}
+
+### Get scans by status
+GET {{baseUrl}}/analytics/scans/by-status
+Authorization: Bearer {{token}}
+
+### Get scan trends
+GET {{baseUrl}}/analytics/scans/trends?days=30
+Authorization: Bearer {{token}}
+
+### Get farm summary
+GET {{baseUrl}}/analytics/farms/summary
+Authorization: Bearer {{token}}
+
+### Get system stats (admin only)
+GET {{baseUrl}}/analytics/admin/system-stats
+Authorization: Bearer {{token}}
+
+### ===== NOTES =====
+
+# To use these requests:
+# 1. Install REST Client extension in VSCode
+# 2. Replace {{baseUrl}} with your API base URL
+# 3. After login, copy the access_token and update the {{token}} variable
+# 4. Run requests by clicking "Send Request" above each request
+#
+# Alternative tools:
+# - Postman: Import as raw requests
+# - curl: Copy and paste in terminal
+# - Thunder Client: Install in VSCode
+#
+# Image Upload Note:
+# For file uploads via REST Client, use:
+# POST {{baseUrl}}/uploads/scan-image
+# Authorization: Bearer {{token}}
+# Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+#
+# [file content here]

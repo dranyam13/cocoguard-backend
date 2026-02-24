@@ -1,0 +1,17 @@
+{
+  "project": "CocoGuard",
+  "task": "detect",
+  "model": "YOLO26s Detect",
+  "imgsz": 512,
+  "classes": [
+    "APW Adult",
+    "APW Larvae",
+    "Brontispa Adult",
+    "Brontispa Pupa",
+    "Rhinoceros Beetle",
+    "Slug Caterpillar",
+    "White Grub"
+  ],
+  "nc": 7,
+  "weights": "/content/drive/MyDrive/CocoGuard_YOLO_Compare/runs/yolo26s/train/weights/best.pt"
+}

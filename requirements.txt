@@ -1,0 +1,29 @@
+# NOTE: Run 'pip install --upgrade -r requirements.txt' periodically to get security patches
+# Last updated: 2026-02-21
+
+fastapi>=0.115.0
+uvicorn>=0.24.0
+sqlalchemy>=2.0.35
+alembic>=1.13.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+pydantic[email]>=2.5.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+aiofiles>=23.2.1
+email-validator>=2.1.0
+
+# Image processing and ML
+Pillow>=10.0.1
+numpy>=1.24.0
+tensorflow>=2.13.0
+
+# HTTP client for URL predictions
+httpx>=0.25.0
+
+# Firebase Cloud Messaging for push notifications
+firebase-admin>=6.0.0
+
+# Rate limiting middleware
+slowapi>=0.1.9
