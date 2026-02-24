@@ -3,9 +3,9 @@ services:
   - type: web
     name: cocoguard-api
     runtime: python
-    region: singapore  # Change to your preferred region: oregon, ohio, frankfurt, singapore
-    plan: free  # Free tier - may have memory limits for TensorFlow
-    buildCommand: chmod +x build.sh && ./build.sh
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
