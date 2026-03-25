@@ -50,10 +50,10 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Allow frontends to call this API - dynamic CORS using regex
-# Matches: localhost, 127.0.0.1, private IPs, Render, Cloudflare Pages, and Vercel
+# Matches: localhost, 127.0.0.1, private IPs, Render, Cloudflare Pages, Workers, and Vercel
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|[\w-]+\.onrender\.com|[\w-]+\.pages\.dev|[\w-]+\.vercel\.app)(:\d+)?(/.*)?$",
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|[\w-]+\.onrender\.com|[\w-]+\.pages\.dev|[\w-]+(\.[\w-]+)*\.workers\.dev|[\w-]+\.vercel\.app)(:\d+)?(/.*)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
