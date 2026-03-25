@@ -47,7 +47,16 @@ def get_labels():
 @router.post("")
 async def predict_pest(
     file: UploadFile = File(..., description="Image file to analyze for pest detection"),
-    confidence_threshold: float = Query(0.25, ge=0.0, le=1.0, description="25% initial confidence threshold for YOLO detection. Backend applies stricter post-filters to reject non-pest objects."),
+    confidence_threshold: float = Query(
+        0.68,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "68% initial confidence threshold for YOLO detection. "
+            "Backend uses MORPHOLOGY-FIRST filtering: bbox size/shape guards reject "
+            "ants (area<0.15) and spiders (aspect>2.0) BEFORE confidence checks."
+        ),
+    ),
     save_image: bool = Query(True, description="Save uploaded image to server"),
     tree_code: Optional[str] = Form(None, description="Tree code/identifier"),
     location_text: Optional[str] = Form(None, description="Location description"),
@@ -161,14 +170,13 @@ async def predict_pest(
     
     # ── Determine detection status BEFORE saving scan ──
     # A valid pest detection must meet these criteria:
-    # 1. Confidence must be >= 50% (above the 50% sigmoid baseline)
-    # 2. Must be one of the 7 known coconut pests
-    # 3. If no predictions at all, it's immediately OUT_OF_SCOPE (unfamiliar image)
-    # The model is trained ONLY on 7 pest classes, so genuine pests get 55%+
-    # while non-pest objects produce scattered noise that gets caught by
-    # verification threshold, multi-class filter, and min anchors in prediction_service
+    # 1. MORPHOLOGY: Must pass size/shape guards (area >= 0.15 for beetles, aspect < 2.0)
+    # 2. CONFIDENCE: Must be >= 68% (class-specific minimums handle finer validation)
+    # 3. PEST TYPE: Must be one of the 7 known coconut pests
+    # The morphology guards catch ants/spiders BEFORE confidence checks,
+    # allowing real beetles at 68-74% confidence to pass if morphologically correct.
     
-    MIN_CONFIDENCE_THRESHOLD = 50.0
+    MIN_CONFIDENCE_THRESHOLD = 68.0
     
     VALID_COCONUT_PESTS = [
         'APW Adult', 'APW Larvae', 'Brontispa Adult', 'Brontispa Pupa',
@@ -328,7 +336,7 @@ async def predict_batch(
     service = get_prediction_service()
     
     # Detection thresholds (same as main endpoint)
-    MIN_CONFIDENCE_THRESHOLD = 75.0
+    MIN_CONFIDENCE_THRESHOLD = 68.0
     VALID_COCONUT_PESTS = [
         'APW Adult', 'APW Larvae', 'Brontispa Adult', 'Brontispa Pupa',
         'Rhinoceros Beetle', 'Slug Caterpillar', 'White Grub'

@@ -35,6 +35,3 @@ uploads/
 # OS
 .DS_Store
 Thumbs.db
-
-# Keep model directory (needed for deployment)
-!model/

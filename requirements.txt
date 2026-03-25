@@ -13,7 +13,6 @@ pydantic-settings>=2.1.0
 python-dotenv>=1.0.0
 aiofiles>=23.2.1
 email-validator>=2.1.0
-aiosmtplib>=2.0.0
 
 # Image processing and ML
 Pillow>=10.0.1
@@ -28,6 +27,3 @@ firebase-admin>=6.0.0
 
 # Rate limiting middleware
 slowapi>=0.1.9
-
-# SMS service
-twilio>=8.0.0

@@ -26,8 +26,8 @@ from collections import defaultdict
 import time
 
 _failed_logins: dict[str, list[float]] = defaultdict(list)
-_LOCKOUT_THRESHOLD = 5  # max failed attempts
-_LOCKOUT_WINDOW = 900  # 15 minutes in seconds
+_LOCKOUT_THRESHOLD = 20  # max failed attempts (increased for dev)
+_LOCKOUT_WINDOW = 300  # 5 minutes in seconds (reduced for dev)
 
 
 def _check_login_lockout(ip: str):
@@ -267,7 +267,7 @@ def complete_registration(
 
 
 @router.post("/login")
-@limiter.limit("5/minute")
+@limiter.limit("30/minute")
 def login(request: Request, login_in: schemas.LoginRequest, db: Session = Depends(get_db)):
     client_ip = get_remote_address(request)
     _check_login_lockout(client_ip)

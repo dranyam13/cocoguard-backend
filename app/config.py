@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # Security
     secret_key: str = ""  # MUST be set via .env — app will fail-safe if empty
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 1440  # 24 hours
+    access_token_expire_minutes: int = 10080  # 7 days
     
     # File Upload
     max_upload_size: int = 5242880  # 5MB

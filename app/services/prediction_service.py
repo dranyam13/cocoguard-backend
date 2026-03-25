@@ -24,19 +24,13 @@ class PestPredictionService:
         self.output_details = None
         self.model_loaded = False
         
-        # Default paths - can be overridden via environment variables
-        # Priority: ENV var > local model/ dir > cocoguard assets
-        default_model_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../model'))
-        fallback_model_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../cocoguard/assets/model'))
-        
-        # Check which directory has the model
-        if os.path.exists(os.path.join(default_model_dir, 'best_float16.tflite')):
-            model_dir = default_model_dir
-        else:
-            model_dir = fallback_model_dir
-            
-        self.model_path = os.environ.get('MODEL_PATH', os.path.join(model_dir, 'best_float16.tflite'))
-        self.labels_path = os.environ.get('LABELS_PATH', os.path.join(model_dir, 'labels.txt'))
+        # Default paths - can be overridden
+        self.model_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '../../../cocoguard/assets/model/best_float16.tflite')
+        )
+        self.labels_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '../../../cocoguard/assets/model/labels.txt')
+        )
         
     def load_model(self) -> bool:
         """Load the TFLite model and labels"""
@@ -148,7 +142,7 @@ class PestPredictionService:
         
         return img_array
     
-    def predict(self, image: Image.Image, confidence_threshold: float = 0.5) -> Dict:
+    def predict(self, image: Image.Image, confidence_threshold: float = 0.70) -> Dict:
         """
         Run prediction on an image
         
@@ -218,6 +212,19 @@ class PestPredictionService:
         WHITE_GRUB_ID  = 6
         BRONTISPA_ID   = 2
         BRONTISPA_PUPA_ID = 3
+        RHINO_ID       = 4
+
+        # Class-specific minimum confidences - ONLY for genuine pest validation
+        # Morphological guards (size/shape) handle non-pest rejection separately
+        CLASS_MIN_CONF = {
+            0: 0.68,  # APW Adult
+            1: 0.78,  # APW Larvae (keep high due to low samples)
+            2: 0.68,  # Brontispa Adult
+            3: 0.68,  # Brontispa Pupa
+            4: 0.68,  # Rhinoceros Beetle — lowered, morphology guards do the filtering
+            5: 0.68,  # Slug Caterpillar
+            6: 0.70,  # White Grub
+        }
 
         try:
             # Remove batch dimension: [1, 300, 6] → [300, 6]
@@ -269,6 +276,64 @@ class PestPredictionService:
             print("=" * 50)
 
             if not predictions:
+                return []
+
+            # ╔════════════════════════════════════════════════════════════════╗
+            # ║  MORPHOLOGY-FIRST FILTERING: Check size/shape BEFORE confidence ║
+            # ║  Rejects ants/spiders based on physical characteristics        ║
+            # ╚════════════════════════════════════════════════════════════════╝
+            
+            top_cls = predictions[0]['class_id']
+            bbox = predictions[0].get('bbox') or {}
+            width = float(bbox.get('width', 0.0))
+            height = float(bbox.get('height', 0.0))
+            area = width * height
+            aspect_ratio = max(width, height) / max(min(width, height), 0.001)
+            
+            print(f"[DEBUG] Bbox analysis: area={area:.4f}, aspect_ratio={aspect_ratio:.2f}")
+            
+            # Rhinoceros Beetle morphology guards
+            if top_cls == RHINO_ID:
+                # Real Rhinoceros Beetles are LARGE (area > 0.15) and COMPACT (aspect < 2.0)
+                # Ants are tiny, spiders are elongated
+                if area < 0.15:
+                    print(f"[DEBUG] ❌ Rhino bbox too small (area={area:.4f} < 0.15) → ANT/INSECT detected, rejecting")
+                    return []
+                if aspect_ratio > 2.0:
+                    print(f"[DEBUG] ❌ Rhino aspect ratio elongated ({aspect_ratio:.2f} > 2.0) → SPIDER detected, rejecting")
+                    return []
+                print(f"[DEBUG] ✅ Rhino morphology check passed (large beetle-shaped object)")
+
+            # Brontispa morphology guards
+            if top_cls in [BRONTISPA_ID, BRONTISPA_PUPA_ID]:
+                # Brontispa are medium-sized beetles, not spider-like
+                if aspect_ratio > 1.8:
+                    print(f"[DEBUG] ❌ Brontispa aspect ratio elongated ({aspect_ratio:.2f} > 1.8) → SPIDER detected, rejecting")
+                    return []
+                if area < 0.10:
+                    print(f"[DEBUG] ❌ Brontispa bbox too small (area={area:.4f} < 0.10) → INSECT detected, rejecting")
+                    return []
+                print(f"[DEBUG] ✅ Brontispa morphology check passed")
+
+            # Additional guards for non-pest objects:
+            # - Require high top confidence
+            # - Require sufficient gap to the next class
+            top_conf = predictions[0]['_conf']
+            second_conf = predictions[1]['_conf'] if len(predictions) > 1 else 0.0
+            gap = top_conf - second_conf
+
+            # If overall confidence is low or the gap is small, treat as non-pest noise
+            if top_conf < 0.68:
+                print(f"[DEBUG] ❌ Top confidence {top_conf*100:.1f}% < 68% → non-pest")
+                return []
+            if gap < 0.18 and top_conf < 0.80:
+                print(f"[DEBUG] ❌ Gap {gap*100:.1f}% too small with conf {top_conf*100:.1f}% → non-pest")
+                return []
+
+            # Class-specific minimum confidence check (after morphology passes)
+            cls_min = CLASS_MIN_CONF.get(top_cls, 0.70)
+            if top_conf < cls_min:
+                print(f"[DEBUG] ❌ {predictions[0]['pest_type']} below class min {cls_min*100:.0f}% → non-pest")
                 return []
 
             # Domain Rule 1: multi-class confusion guard
