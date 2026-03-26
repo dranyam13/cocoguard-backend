@@ -38,19 +38,20 @@ def generate_verification_code() -> str:
 async def send_registration_code(
     request: schemas.AdminRegisterSendCode,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     """
     Send a verification code to the email for admin registration.
     Only existing admins can register new admin accounts.
     If the email is already registered, return an error.
     """
-    # Gate: only existing admins can invite new admins
-    if current_user.role != models.UserRole.admin:
+    # Bootstrap mode: allow unauthenticated registration only if no admin exists yet.
+    # Once an admin account exists, this public endpoint is blocked.
+    has_admin = db.query(models.User).filter(models.User.role == models.UserRole.admin).first() is not None
+    if has_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only existing administrators can register new admin accounts."
+            detail="Admin account already exists. Please login as admin to manage accounts."
         )
     # Check if email is already registered
     existing_user = db.query(models.User).filter(
@@ -244,7 +245,7 @@ async def resend_registration_code(
     db: Session = Depends(get_db)
 ):
     """Resend registration verification code."""
-    return await send_registration_code(request, background_tasks, db)
+    return await send_registration_code(request=request, background_tasks=background_tasks, db=db)
 
 
 # ====================================================
