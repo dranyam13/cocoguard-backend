@@ -28,3 +28,4 @@ firebase-admin>=6.0.0
 
 # Rate limiting middleware
 slowapi>=0.1.9
+twilio>=8.0.0
